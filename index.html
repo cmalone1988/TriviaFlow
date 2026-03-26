@@ -1,137 +1,92 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TriviaFlow: The R&B Archive</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@700&family=Inter:wght@400;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background: #050505; color: #fff; }
-        .font-title { font-family: 'Syncopate', sans-serif; }
-        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .card-flip { perspective: 1000px; }
-        .card-inner { transition: transform 0.6s; transform-style: preserve-3d; cursor: pointer; height: 550px; }
-        .card-inner.is-flipped { transform: rotateY(180deg); }
-        .card-face { backface-visibility: hidden; position: absolute; width: 100%; height: 100%; }
-        .card-back { transform: rotateY(180deg); overflow-y: auto; }
-    </style>
-</head>
-<body class="min-h-screen p-6">
-    <div class="max-w-4xl mx-auto">
-        <header class="text-center mb-8">
-            <h1 class="font-title text-3xl mb-2 bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent">TriviaFlow</h1>
-            <div id="qrcode-container" class="flex justify-center mb-4"><div id="qrcode" class="p-2 bg-white rounded-lg"></div></div>
-            <p class="text-gray-500 uppercase tracking-widest text-[10px]">Scan to Share Archive</p>
-        </header>
-
-        <div id="archive-view" class="grid grid-cols-3 md:grid-cols-5 gap-3"></div>
-
-        <div id="discovery-view" class="hidden">
-            <button onclick="showArchive()" class="mb-6 text-sm text-gray-400">← Back to Years</button>
-            <div class="card-flip w-full max-w-sm mx-auto">
-                <div id="card-inner" class="card-inner relative w-full">
-                    <div class="card-face card-front glass rounded-3xl p-8 flex flex-col justify-center items-center text-center" onclick="flipCard()">
-                        <span id="card-year" class="text-pink-500 font-bold mb-4"></span>
-                        <h2 id="card-album" class="text-2xl font-title mb-2 leading-tight"></h2>
-                        <p id="card-artist" class="text-xl text-gray-400"></p>
-                        <p class="mt-8 text-xs text-purple-400 animate-pulse font-bold uppercase">Tap to Play Trivia</p>
-                    </div>
-                    <div class="card-face card-back glass rounded-3xl p-6 flex flex-col bg-white text-black" onclick="event.stopPropagation()">
-                        <h3 class="font-bold text-[10px] uppercase text-gray-400 mb-4 tracking-widest">Trivia Question</h3>
-                        <p id="card-question" class="text-lg font-bold mb-4 leading-tight text-gray-800"></p>
-                        
-                        <div id="options-grid" class="space-y-2 mb-6">
-                            </div>
-
-                        <div id="feedback" class="hidden text-center p-3 rounded-xl mb-4 font-bold text-sm"></div>
-
-                        <div class="mt-auto bg-gray-50 p-4 rounded-2xl border border-gray-200">
-                            <h4 class="text-[10px] font-bold mb-2 uppercase text-gray-500">Join the SeeThree VIP list</h4>
-                            <input type="email" placeholder="Email for more 90s trivia" class="w-full p-2 text-sm border rounded mb-2 outline-none">
-                            <button class="w-full bg-black text-white text-xs font-bold py-2 rounded-lg uppercase">Join Now</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        const musicData = {
+const musicData = {
+            "1995": { 
+                artist: "TLC", album: "CrazySexyCool", 
+                question: "TLC won Best R&B Album in '95, but which of these was their Grammy-winning #1 hit?", 
+                options: ["Waterfalls", "Creep", "Red Light Special", "Diggin' on You"], correct: 1,
+                fact: "Best New Artist Winner: Brandy (Soul Train Music Awards)."
+            },
+            "1996": { 
+                artist: "Maxwell", album: "Urban Hang Suite", 
+                question: "Maxwell helped ignite 'Neo-Soul' in '96. Which song was his debut Billboard hit?", 
+                options: ["Ascension", "Sumthin' Sumthin'", "Til the Cops Come Knockin'", "Suitelady"], correct: 2,
+                fact: "Best New Artist: Toni Braxton (Grammy for Best New Artist occurred this year)."
+            },
+            "1997": { 
+                artist: "Erykah Badu", album: "Baduizm", 
+                question: "Baduizm debuted at #2 on the Billboard 200. What was her iconic lead single?", 
+                options: ["Next Lifetime", "On & On", "Appletree", "Otherside of the Game"], correct: 1,
+                fact: "Album of the Year Nominee: 'The Day' by Babyface."
+            },
             "1998": { 
-                artist: "Lauryn Hill", 
-                album: "The Miseducation of Lauryn Hill", 
-                question: "Which of these was a hit B-Side / Single from this 1998 masterpiece?",
-                options: ["Ex-Factor", "On & On", "No Scrubs", "Golden"],
-                correct: 0,
-                fact: "It was the first hip-hop album to win Album of the Year at the Grammys."
+                artist: "Lauryn Hill", album: "Miseducation", 
+                question: "Lauryn Hill made history in '98. How many Grammys did she win in a single night?", 
+                options: ["3", "5", "8", "10"], correct: 1,
+                fact: "Best New Artist: Lauryn Hill (Grammy Winner)."
+            },
+            "1999": { 
+                artist: "Destiny's Child", album: "The Writing's on the Wall", 
+                question: "Which of these was NOT a #1 Billboard Hot 100 single from this album?", 
+                options: ["Bills, Bills, Bills", "Say My Name", "Bug a Boo", "Jumpin', Jumpin'"], correct: 2,
+                fact: "Best New Artist: Christina Aguilera (Beat out Macy Gray)."
+            },
+            "2000": { 
+                artist: "D'Angelo", album: "Voodoo", 
+                question: "Voodoo is a Neo-Soul masterpiece. Which artist co-wrote 'Untitled (How Does It Feel)'?", 
+                options: ["Prince", "Raphael Saadiq", "Questlove", "Maxwell"], correct: 1,
+                fact: "Best New Artist: Sisqó (Billboard Music Award Winner)."
+            },
+            "2001": { 
+                artist: "Alicia Keys", album: "Songs in A Minor", 
+                question: "Alicia Keys' debut was a global smash. Which classical composer inspired 'Piano & I'?", 
+                options: ["Beethoven", "Bach", "Chopin", "Mozart"], correct: 0,
+                fact: "Best New Artist: Alicia Keys (Grammy Winner)."
+            },
+            "2002": { 
+                artist: "Ashanti", album: "Ashanti", 
+                question: "Ashanti set a record for the highest first-week sales for a female debut. What was the lead single?", 
+                options: ["Happy", "Baby", "Foolish", "Rescue"], correct: 2,
+                fact: "Best New Artist: Ashanti (Grammy Nominee/Billboard Winner)."
+            },
+            "2003": { 
+                artist: "Beyoncé", album: "Dangerously in Love", 
+                question: "Beyoncé's solo debut featured which legendary R&B singer on 'The Closer I Get to You'?", 
+                options: ["Luther Vandross", "Usher", "Brian McKnight", "D'Angelo"], correct: 0,
+                fact: "Best New Artist: 50 Cent (Grammy Nominee / Billboard Winner)."
             },
             "2004": { 
-                artist: "Usher", 
-                album: "Confessions", 
-                question: "Which track on Confessions stayed #1 on Billboard for 12 weeks?",
-                options: ["Burn", "Caught Up", "Yeah!", "My Boo"],
-                correct: 2,
-                fact: "Confessions sold 1.1 million copies in its first week."
+                artist: "Usher", album: "Confessions", 
+                question: "Which song was a 'hidden track' on the original release of Confessions?", 
+                options: ["My Boo", "Red Light", "Can U Handle It?", "Throwback"], correct: 0,
+                fact: "Album of the Year Nominee: 'Confessions' (Usher)."
+            },
+            "2005": { 
+                artist: "Mariah Carey", album: "Emancipation of Mimi", 
+                question: "Mariah's 'We Belong Together' was the song of the decade. How many weeks was it #1?", 
+                options: ["10", "12", "14", "16"], correct: 2,
+                fact: "Best New Artist: John Legend (Grammy Winner)."
+            },
+            "2006": { 
+                artist: "Amy Winehouse", album: "Back to Black", 
+                question: "Back to Black blended R&B, Soul, and Jazz. Which girl group sound inspired the album?", 
+                options: ["The Supremes", "The Ronettes", "The Shirelles", "En Vogue"], correct: 1,
+                fact: "Best New Artist: Corinne Bailey Rae (Grammy Nominee)."
+            },
+            "2007": { 
+                artist: "Keyshia Cole", album: "Just Like You", 
+                question: "This album featured the hit 'Let It Go'. Which two legends were featured on that track?", 
+                options: ["Missy Elliott & Lil Kim", "Mary J. Blige & Eve", "Missy Elliott & Young Jeezy", "Faith Evans & Trina"], correct: 2,
+                fact: "Best New Artist: Jordin Sparks (American Music Award)."
+            },
+            "2008": { 
+                artist: "Jazmine Sullivan", album: "Fearless", 
+                question: "Jazmine Sullivan's debut was executive produced by which female R&B icon?", 
+                options: ["Mary J. Blige", "Missy Elliott", "Lauryn Hill", "Alicia Keys"], correct: 1,
+                fact: "Best New Artist Nominee: Jazmine Sullivan (Grammy)."
+            },
+            "2009": { 
+                artist: "Maxwell", album: "BLACKsummers'night", 
+                question: "Maxwell returned after 8 years. Which song won the Grammy for Best Male R&B Vocal?", 
+                options: ["Bad Habits", "Pretty Wings", "Fistful of Tears", "Stop the World"], correct: 1,
+                fact: "Best New Artist: Keri Hilson (Soul Train Music Award)."
             }
-            // You can add the rest of the years following this pattern
         };
-
-        new QRCode(document.getElementById("qrcode"), { text: window.location.href, width: 80, height: 80 });
-
-        const archiveGrid = document.getElementById('archive-view');
-        [1995, 1998, 2004, 2009].forEach(year => { // Showing specific years for example
-            const btn = document.createElement('button');
-            btn.className = "year-btn glass p-4 rounded-xl font-title text-sm";
-            btn.innerText = year;
-            btn.onclick = () => showDiscovery(year);
-            archiveGrid.appendChild(btn);
-        });
-
-        function flipCard() { document.getElementById('card-inner').classList.toggle('is-flipped'); }
-
-        function showDiscovery(year) {
-            const data = musicData[year] || { artist: "R&B Legend", album: "Classic Album", question: "Coming Soon!", options: ["A", "B", "C", "D"], correct: 0 };
-            document.getElementById('archive-view').classList.add('hidden');
-            document.getElementById('discovery-view').classList.remove('hidden');
-            
-            document.getElementById('card-year').innerText = year;
-            document.getElementById('card-album').innerText = data.album;
-            document.getElementById('card-artist').innerText = data.artist;
-            document.getElementById('card-question').innerText = data.question;
-            
-            const optionsContainer = document.getElementById('options-grid');
-            optionsContainer.innerHTML = '';
-            data.options.forEach((opt, i) => {
-                const btn = document.createElement('button');
-                btn.className = "w-full p-3 text-left border rounded-xl text-sm hover:bg-gray-100 transition-colors";
-                btn.innerText = opt;
-                btn.onclick = () => checkAnswer(i, data.correct);
-                optionsContainer.appendChild(btn);
-            });
-            
-            document.getElementById('feedback').classList.add('hidden');
-            document.getElementById('card-inner').classList.remove('is-flipped');
-        }
-
-        function checkAnswer(selected, correct) {
-            const feedback = document.getElementById('feedback');
-            feedback.classList.remove('hidden');
-            if(selected === correct) {
-                feedback.innerText = "CORRECT! 🎉";
-                feedback.className = "text-center p-3 rounded-xl mb-4 font-bold text-sm bg-green-100 text-green-700";
-            } else {
-                feedback.innerText = "NOT QUITE! Try again.";
-                feedback.className = "text-center p-3 rounded-xl mb-4 font-bold text-sm bg-red-100 text-red-700";
-            }
-        }
-
-        function showArchive() {
-            document.getElementById('archive-view').classList.remove('hidden');
-            document.getElementById('discovery-view').classList.add('hidden');
-        }
-    </script>
-</body>
-</html>
