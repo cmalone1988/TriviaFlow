@@ -3,73 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TriviaFlow: The R&B Archive</title>
+    <title>TriviaFlow - The 90s/00s R&B Archive</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@700&family=Inter:wght@400;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background: #050505; color: #fff; }
+        @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@700&family=Inter:wght@400;700&family=Orbitron:wght@700&display=swap');
+        
+        body { font-family: 'Inter', sans-serif; background: #050505; color: #fff; scroll-behavior: smooth; }
         .font-title { font-family: 'Syncopate', sans-serif; }
+        .font-retro { font-family: 'Orbitron', sans-serif; }
+        
+        /* Claude's 90s/Y2K Aesthetic */
+        .neon-grid {
+            background-image: linear-gradient(0deg, transparent 24%, rgba(0, 255, 255, .05) 25%, rgba(0, 255, 255, .05) 26%, transparent 27%, transparent 74%, rgba(0, 255, 255, .05) 75%, rgba(0, 255, 255, .05) 76%, transparent 77%, transparent), linear-gradient(90deg, transparent 24%, rgba(0, 255, 255, .05) 25%, rgba(0, 255, 255, .05) 26%, transparent 27%, transparent 74%, rgba(0, 255, 255, .05) 75%, rgba(0, 255, 255, .05) 76%, transparent 77%, transparent);
+            background-size: 50px 50px;
+        }
+
         .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); }
         .card-flip { perspective: 1000px; }
-        .card-inner { transition: transform 0.6s; transform-style: preserve-3d; cursor: pointer; height: 550px; }
+        .card-inner { transition: transform 0.6s; transform-style: preserve-3d; cursor: pointer; height: 500px; }
         .card-inner.is-flipped { transform: rotateY(180deg); }
         .card-face { backface-visibility: hidden; position: absolute; width: 100%; height: 100%; }
         .card-back { transform: rotateY(180deg); overflow-y: auto; }
+        
+        .btn-neon {
+            background: linear-gradient(45deg, #ff00cc, #3333ff);
+            box-shadow: 0 0 20px rgba(255, 0, 204, 0.4);
+            transition: all 0.3s ease;
+        }
+        .btn-neon:hover { transform: scale(1.05); box-shadow: 0 0 30px rgba(255, 0, 204, 0.6); }
     </style>
 </head>
-<body class="min-h-screen p-6">
-    <div class="max-w-4xl mx-auto">
-        <header class="text-center mb-8">
-            <h1 class="font-title text-3xl mb-2 bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent">TriviaFlow</h1>
-            <div id="qrcode-container" class="flex justify-center mb-4"><div id="qrcode" class="p-2 bg-white rounded-lg"></div></div>
-            <p class="text-gray-500 uppercase tracking-widest text-[10px]">Scan to Share Archive</p>
-        </header>
+<body class="neon-grid">
 
-        <div id="archive-view" class="grid grid-cols-3 md:grid-cols-5 gap-3"></div>
+    <section class="min-h-screen flex flex-col items-center justify-center p-6 text-center">
+        <div class="mb-6 float-animation">
+            <h1 class="font-retro text-5xl md:text-7xl tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-pink-500">
+                TRIVIAFLOW
+            </h1>
+            <p class="text-cyan-400 font-mono tracking-widest mt-2 uppercase">System Status: Vibe Active</p>
+        </div>
 
-        <div id="discovery-view" class="hidden">
-            <button onclick="showArchive()" class="mb-6 text-sm text-gray-400">← Back to Years</button>
-            <div class="card-flip w-full max-w-sm mx-auto">
-                <div id="card-inner" class="card-inner relative w-full">
-                    <div class="card-face card-front glass rounded-3xl p-8 flex flex-col justify-center items-center text-center" onclick="flipCard()">
-                        <span id="card-year" class="text-pink-500 font-bold mb-4"></span>
-                        <h2 id="card-album" class="text-2xl font-title mb-2 leading-tight"></h2>
-                        <p id="card-artist" class="text-xl text-gray-400"></p>
-                        <p class="mt-8 text-xs text-purple-400 animate-pulse font-bold uppercase">Tap to Play Trivia</p>
-                    </div>
-                    <div class="card-face card-back glass rounded-3xl p-6 flex flex-col bg-white text-black" onclick="event.stopPropagation()">
-                        <h3 class="font-bold text-[10px] uppercase text-gray-400 mb-4 tracking-widest">Trivia Question</h3>
-                        <p id="card-question" class="text-lg font-bold mb-4 leading-tight text-gray-800"></p>
-                        
-                        <div id="options-grid" class="space-y-2 mb-6"></div>
-                        <div id="feedback" class="hidden text-center p-3 rounded-xl mb-4 font-bold text-sm"></div>
+        <div class="glass p-8 rounded-3xl max-w-lg w-full mb-10 border-cyan-500/30">
+            <div id="landing-qrcode" class="flex justify-center p-4 bg-white rounded-2xl mb-4 mx-auto w-48 h-48"></div>
+            <p class="text-sm text-gray-400 mb-6 uppercase tracking-widest">Scan to share the archive</p>
+            <a href="#app-section" class="btn-neon px-10 py-4 rounded-full font-black text-lg inline-block uppercase tracking-tighter">
+                Enter The Archive
+            </a>
+        </div>
+        
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl opacity-50">
+            <div class="text-[10px] uppercase">1995-2009 Data</div>
+            <div class="text-[10px] uppercase">B-Side Discovery</div>
+            <div class="text-[10px] uppercase">Billboard Top 40</div>
+            <div class="text-[10px] uppercase">Lead Capture Enabled</div>
+        </div>
+    </section>
 
-                        <div class="mt-auto bg-gray-50 p-4 rounded-2xl border border-gray-200">
-                            <h4 class="text-[10px] font-bold mb-2 uppercase text-gray-500">Join the SeeThree VIP list</h4>
-                            <input type="email" placeholder="Email for more 90s trivia" class="w-full p-2 text-sm border rounded mb-2 outline-none">
-                            <button class="w-full bg-black text-white text-xs font-bold py-2 rounded-lg uppercase">Join Now</button>
+    <section id="app-section" class="min-h-screen p-6 pt-20">
+        <div class="max-w-4xl mx-auto">
+            <header class="text-center mb-12">
+                <h2 class="font-title text-3xl mb-2 text-pink-500 uppercase">Select A Year</h2>
+                <div class="w-24 h-1 bg-cyan-400 mx-auto rounded-full"></div>
+            </header>
+
+            <div id="archive-view" class="grid grid-cols-3 md:grid-cols-5 gap-4">
+                </div>
+
+            <div id="discovery-view" class="hidden">
+                <button onclick="showArchive()" class="mb-8 text-sm text-cyan-400 hover:text-white flex items-center">
+                    ← Back to Years
+                </button>
+                
+                <div class="card-flip w-full max-w-sm mx-auto">
+                    <div id="card-inner" class="card-inner relative w-full">
+                        <div class="card-face card-front glass rounded-3xl p-8 flex flex-col justify-center items-center text-center" onclick="flipCard()">
+                            <span id="card-year" class="text-cyan-400 font-bold mb-4"></span>
+                            <h2 id="card-album" class="text-2xl font-title mb-2"></h2>
+                            <p id="card-artist" class="text-xl text-gray-400"></p>
+                            <p class="mt-8 text-xs text-pink-500 animate-pulse uppercase font-bold">Tap to Play Trivia</p>
+                        </div>
+                        <div class="card-face card-back glass rounded-3xl p-6 flex flex-col bg-white text-black" onclick="event.stopPropagation()">
+                            <h3 class="font-bold text-[10px] uppercase text-gray-400 mb-2 tracking-widest">Trivia Question</h3>
+                            <p id="card-question" class="text-lg font-bold mb-4 leading-tight"></p>
+                            
+                            <div id="options-grid" class="space-y-2 mb-4"></div>
+                            <div id="feedback" class="hidden text-center p-3 rounded-xl mb-4 font-bold text-sm"></div>
+
+                            <div class="mt-auto bg-gray-50 p-4 rounded-2xl border border-gray-200">
+                                <h4 class="text-[10px] font-bold mb-1 uppercase text-gray-500">Join the SeeThree VIP list</h4>
+                                <input type="email" placeholder="Email Address" class="w-full p-2 text-sm border rounded mb-2">
+                                <button class="w-full bg-black text-white text-xs font-bold py-2 rounded-lg uppercase">Join Now</button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 
     <script>
+        // YOUR DATA - Updated with the 90s/00s R&B specific questions
         const musicData = {
-            "1995": { artist: "TLC", album: "CrazySexyCool", question: "Which of these was their Grammy-winning #1 hit in '95?", options: ["Waterfalls", "Creep", "Red Light Special", "Diggin' on You"], correct: 1 },
+            "1995": { artist: "TLC", album: "CrazySexyCool", question: "TLC won Best R&B Album in '95, but which track was their first #1 hit from this album?", options: ["Waterfalls", "Creep", "Red Light Special", "Diggin' on You"], correct: 1 },
             "1998": { artist: "Lauryn Hill", album: "Miseducation", question: "How many Grammys did Lauryn Hill win in a single night for this album?", options: ["3", "5", "8", "10"], correct: 1 },
-            "2004": { artist: "Usher", album: "Confessions", question: "Which track on Confessions stayed #1 on Billboard for 12 weeks?", options: ["Burn", "Caught Up", "Yeah!", "My Boo"], correct: 2 }
-            // Add more years here following the same pattern
+            "2004": { artist: "Usher", album: "Confessions", question: "Which track on Confessions stayed #1 on Billboard for 12 weeks?", options: ["Burn", "Caught Up", "Yeah!", "My Boo"], correct: 2 },
+            "2001": { artist: "Alicia Keys", album: "Songs in A Minor", question: "Which classical composer inspired the piano on 'Piano & I'?", options: ["Beethoven", "Bach", "Chopin", "Mozart"], correct: 0 },
+            "2005": { artist: "Mariah Carey", album: "Emancipation of Mimi", question: "How many weeks did 'We Belong Together' spend at #1?", options: ["10", "12", "14", "16"], correct: 2 }
         };
 
-        new QRCode(document.getElementById("qrcode"), { text: window.location.href, width: 80, height: 80 });
+        // Generate QR Code for the Landing Page
+        new QRCode(document.getElementById("landing-qrcode"), {
+            text: window.location.href,
+            width: 180,
+            height: 180,
+            colorDark : "#000000",
+            colorLight : "#ffffff"
+        });
 
         const archiveGrid = document.getElementById('archive-view');
-        Object.keys(musicData).forEach(year => {
+        Object.keys(musicData).sort().forEach(year => {
             const btn = document.createElement('button');
-            btn.className = "year-btn glass p-4 rounded-xl font-title text-sm";
+            btn.className = "glass p-6 rounded-2xl font-title text-xl text-cyan-400 hover:bg-cyan-400 hover:text-black transition-all";
             btn.innerText = year;
             btn.onclick = () => showDiscovery(year);
             archiveGrid.appendChild(btn);
@@ -97,6 +152,7 @@
             });
             document.getElementById('feedback').classList.add('hidden');
             document.getElementById('card-inner').classList.remove('is-flipped');
+            window.scrollTo(0, document.getElementById('app-section').offsetTop);
         }
 
         function checkAnswer(selected, correct) {
