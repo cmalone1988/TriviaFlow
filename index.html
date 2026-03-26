@@ -3,92 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>90s & 2000s Music Trivia</title>
+    <title>TriviaFlow: The R&B Archive</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@700&family=Inter:wght@400;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background: #000; color: #fff; }
-        .font-title { font-family: 'Syncopate', sans-serif; text-transform: uppercase; letter-spacing: -1px; }
-        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .gradient-text { background: linear-gradient(45deg, #ff00cc, #3333ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        body { font-family: 'Inter', sans-serif; background: #050505; color: #fff; }
+        .font-title { font-family: 'Syncopate', sans-serif; }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .card-flip { perspective: 1000px; }
+        .card-inner { transition: transform 0.6s; transform-style: preserve-3d; cursor: pointer; }
+        .card-inner.is-flipped { transform: rotateY(180deg); }
+        .card-face { backface-visibility: hidden; position: absolute; width: 100%; height: 100%; }
+        .card-back { transform: rotateY(180deg); }
+        .year-btn { transition: all 0.3s ease; }
+        .year-btn:hover { background: #fff; color: #000; transform: translateY(-2px); }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4">
-    <div id="game-container" class="w-full max-w-md glass rounded-3xl p-8 shadow-2xl">
-        <div class="mb-8 text-center">
-            <h1 class="font-title text-2xl mb-2 gradient-text">TriviaFlow</h1>
-            <div class="flex justify-between text-xs text-gray-400 font-bold uppercase tracking-widest">
-                <span id="category-label">90s R&B</span>
-                <span id="score-label">Score: 0</span>
+<body class="min-h-screen p-6">
+    <div class="max-w-4xl mx-auto">
+        <header class="text-center mb-12">
+            <h1 class="font-title text-3xl md:text-5xl mb-2 tracking-tighter bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent">TriviaFlow</h1>
+            <p class="text-gray-500 uppercase tracking-widest text-xs">The R&B Billboard Archive: 1995 — 2009</p>
+        </header>
+
+        <div id="archive-view" class="grid grid-cols-3 md:grid-cols-5 gap-4">
             </div>
-        </div>
 
-        <div id="question-card" class="mb-8">
-            <p id="question-text" class="text-xl font-medium leading-tight mb-6">Loading your first question...</p>
-            <div id="options-container" class="space-y-3">
+        <div id="discovery-view" class="hidden">
+            <button onclick="showArchive()" class="mb-8 text-sm text-gray-400 hover:text-white flex items-center">
+                ← Back to Years
+            </button>
+            
+            <div id="flashcard-container" class="flex flex-col items-center">
+                <div class="card-flip w-full max-w-sm h-96">
+                    <div id="card-inner" class="card-inner relative w-full h-full" onclick="this.classList.toggle('is-flipped')">
+                        <div class="card-face card-front glass rounded-3xl p-8 flex flex-col justify-center items-center text-center">
+                            <span id="card-year" class="text-pink-500 font-bold mb-4"></span>
+                            <h2 id="card-album" class="text-2xl font-title mb-2"></h2>
+                            <p id="card-artist" class="text-xl text-gray-400"></p>
+                            <p class="mt-8 text-xs text-gray-600 animate-pulse">TAP TO REVEAL B-SIDE</p>
+                        </div>
+                        <div class="card-face card-back glass rounded-3xl p-8 flex flex-col justify-center bg-white text-black">
+                            <h3 class="font-bold text-sm uppercase text-gray-500 mb-2">Billboard Top 40 Fact</h3>
+                            <p id="card-fact" class="mb-6 italic"></p>
+                            <div class="border-t border-gray-200 pt-4">
+                                <h3 class="font-bold text-sm uppercase text-gray-500">The B-Side Gem</h3>
+                                <p id="card-bside" class="text-lg font-medium"></p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-        </div>
-
-        <div class="w-full bg-white/10 h-1 rounded-full overflow-hidden">
-            <div id="progress-bar" class="bg-gradient-to-r from-pink-500 to-blue-500 h-full transition-all duration-500" style="width: 0%"></div>
+            </div>
         </div>
     </div>
 
     <script>
-        const questions = [
-            { question: "Which girl group told us not to go chasing waterfalls in 1994?", options: ["SWV", "En Vogue", "TLC", "Xscape"], correct: 2, category: "90s R&B" },
-            { question: "Who took us to '808s & Heartbreak' and later 'The Graduation'?", options: ["Jay-Z", "Kanye West", "Ludacris", "Nelly"], correct: 1, category: "2000s Hip Hop" },
-            { question: "Aaliyah's final self-titled album featured which hit single?", options: ["Rock the Boat", "Try Again", "Are You That Somebody", "Back & Forth"], correct: 0, category: "2000s R&B" },
-            { question: "What was the debut single for Outkast in 1993?", options: ["Rosa Parks", "Ms. Jackson", "Player's Ball", "So Fresh, So Clean"], correct: 2, category: "90s Hip Hop" },
-            { question: "Usher's 2004 album 'Confessions' featured which crunk-styled hit?", options: ["Burn", "Yeah!", "Caught Up", "My Boo"], correct: 1, category: "2000s R&B" }
-        ];
+        // Sample Data Structure (You can expand this for every year)
+        const musicData = {
+            "1995": { artist: "D'Angelo", album: "Brown Sugar", fact: "Debuted at #4 on Billboard Top R&B/Hip-Hop Albums.", bside: "Cruisin'" },
+            "1996": { artist: "Maxwell", album: "Urban Hang Suite", fact: "Spent 29 weeks in the Top 40 Billboard 200.", bside: "Sumthin' Sumthin'" },
+            "1997": { artist: "Erykah Badu", album: "Baduizm", fact: "Certified 3x Platinum and hit #2 on Billboard 200.", bside: "Otherside of the Game" },
+            "1998": { artist: "Lauryn Hill", album: "Miseducation", fact: "Broke the record for first-week sales by a female artist in 1998.", bside: "Ex-Factor" },
+            "1999": { artist: "Donell Jones", album: "Where I Wanna Be", fact: "Peaked at #24 on the Billboard 200.", bside: "U Know What's Up" },
+            "2000": { artist: "D'Angelo", album: "Voodoo", fact: "Won Best R&B Album at the 43rd Grammy Awards.", bside: "Send It On" },
+            "2001": { artist: "Alicia Keys", album: "Songs in A Minor", fact: "Debuted at #1 on Billboard 200 with 236k copies sold.", bside: "Jane Doe" },
+            "2002": { artist: "Amerie", album: "All I Have", fact: "Produced entirely by Rich Harrison.", bside: "Show Me" },
+            "2003": { artist: "Monica", album: "After the Storm", fact: "Her first #1 album on the Billboard 200.", bside: "So Gone" },
+            "2004": { artist: "Usher", album: "Confessions", fact: "The best-selling R&B album of the 21st century.", bside: "Throwback" },
+            "2005": { artist: "Mariah Carey", album: "Emancipation of Mimi", fact: "The best selling album of 2005 in the US.", bside: "Stay The Night" },
+            "2006": { artist: "John Legend", album: "Once Again", fact: "Reached #3 on Billboard 200.", bside: "Maxine" },
+            "2007": { artist: "Keyshia Cole", album: "Just Like You", fact: "Nominated for Best Contemporary R&B Album.", bside: "Losing You" },
+            "2008": { artist: "Jazmine Sullivan", album: "Fearless", fact: "Debuted at #1 on Top R&B/Hip-Hop Albums.", bside: "Lions, Tigers & Bears" },
+            "2009": { artist: "Maxwell", album: "BLACKsummers'night", fact: "His first album in 8 years, debuted at #1.", bside: "Pretty Wings" }
+        };
 
-        let currentQ = 0;
-        let score = 0;
+        const archiveGrid = document.getElementById('archive-view');
+        
+        // Generate Buttons
+        for (let year = 1995; year <= 2009; year++) {
+            const btn = document.createElement('button');
+            btn.className = "year-btn glass p-6 rounded-2xl font-title text-xl";
+            btn.innerText = year;
+            btn.onclick = () => showDiscovery(year);
+            archiveGrid.appendChild(btn);
+        }
 
-        function loadQuestion() {
-            const q = questions[currentQ];
-            document.getElementById('question-text').innerText = q.question;
-            document.getElementById('category-label').innerText = q.category;
-            const container = document.getElementById('options-container');
-            container.innerHTML = '';
+        function showDiscovery(year) {
+            const data = musicData[year];
+            document.getElementById('archive-view').classList.add('hidden');
+            document.getElementById('discovery-view').classList.remove('hidden');
             
-            q.options.forEach((opt, i) => {
-                const btn = document.createElement('button');
-                btn.className = "w-full p-4 rounded-2xl bg-white/5 border border-white/10 text-left hover:bg-white/10 transition-all active:scale-95";
-                btn.innerText = opt;
-                btn.onclick = () => checkAnswer(i);
-                container.appendChild(btn);
-            });
+            document.getElementById('card-year').innerText = year;
+            document.getElementById('card-album').innerText = data.album;
+            document.getElementById('card-artist').innerText = data.artist;
+            document.getElementById('card-fact').innerText = data.fact;
+            document.getElementById('card-bside').innerText = data.bside;
             
-            document.getElementById('progress-bar').style.width = `${(currentQ / questions.length) * 100}%`;
+            // Reset flip
+            document.getElementById('card-inner').classList.remove('is-flipped');
         }
 
-        function checkAnswer(choice) {
-            if(choice === questions[currentQ].correct) {
-                score += 10;
-                document.getElementById('score-label').innerText = `Score: ${score}`;
-            }
-            currentQ++;
-            if(currentQ < questions.length) {
-                loadQuestion();
-            } else {
-                showResults();
-            }
+        function showArchive() {
+            document.getElementById('archive-view').classList.remove('hidden');
+            document.getElementById('discovery-view').classList.add('hidden');
         }
-
-        function showResults() {
-            document.getElementById('question-card').innerHTML = `
-                <div class="text-center py-8">
-                    <h2 class="text-4xl font-title mb-4">FINISH</h2>
-                    <p class="text-gray-400 mb-6">You scored ${score} points!</p>
-                    <button onclick="location.reload()" class="px-8 py-3 rounded-full bg-white text-black font-bold">PLAY AGAIN</button>
-                </div>
-            `;
-            document.getElementById('progress-bar').style.width = "100%";
-        }
-
-        loadQuestion();
     </script>
 </body>
 </html>
