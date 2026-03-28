@@ -255,6 +255,9 @@
 
             // LANDING PAGE
             if (gameState === 'landing') {
+                // QR Code embedded directly - no file needed!
+                const qrCodeURL = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent('https://trivia-flow-sigma.vercel.app/')}`;
+                
                 return (
                     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-black p-6 flex items-center justify-center">
                         <div className="max-w-2xl w-full">
@@ -270,17 +273,17 @@
                                 <p className="text-gray-400 text-lg">100 Questions • 8 Eras • Endless Fun</p>
                             </div>
 
-                            {/* QR CODE SECTION */}
+                            {/* QR CODE SECTION - EMBEDDED */}
                             <div className="bg-black/40 backdrop-blur-sm rounded-3xl p-8 mb-8 border-2 border-pink-400/30 slide-up text-center" style={{animationDelay: '0.1s'}}>
                                 <h2 className="text-2xl font-bold text-white mb-4">📱 Share with Friends</h2>
                                 <div className="bg-white p-4 rounded-2xl inline-block mb-4 shadow-2xl" style={{
                                     boxShadow: '0 0 40px rgba(0, 240, 255, 0.4), 0 0 80px rgba(255, 16, 240, 0.2)'
                                 }}>
-                                    {/* REPLACE "qr-code.png" WITH YOUR QR CODE IMAGE FILENAME */}
                                     <img 
-                                        src="qr-code.png" 
+                                        src={qrCodeURL}
                                         alt="Scan to play R&B Trivia" 
                                         className="w-64 h-64"
+                                        loading="lazy"
                                     />
                                 </div>
                                 <p className="text-cyan-400 text-sm uppercase tracking-wider">Scan to Play</p>
@@ -317,7 +320,7 @@
                                                     <div className={`text-2xl font-black ${idx === 0 ? 'text-yellow-400' : idx === 1 ? 'text-gray-300' : idx === 2 ? 'text-orange-400' : 'text-gray-500'}`}>
                                                         #{idx + 1}
                                                     </div>
-                                    <div>
+                                                    <div>
                                                         <div className="text-white font-bold">{entry.name}</div>
                                                         <div className="text-sm text-gray-400">{entry.score}/{entry.total} correct</div>
                                                     </div>
