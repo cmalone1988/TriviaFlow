@@ -3,71 +3,296 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TriviaFlow - R&B Archive</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>Music Trivia - Play Now</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@700&family=Orbitron:wght@700&family=Inter:wght@400;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background: #050505; color: #fff; scroll-behavior: smooth; }
-        .font-retro { font-family: 'Orbitron', sans-serif; }
-        .neon-grid {
-            background-image: linear-gradient(0deg, transparent 24%, rgba(0, 255, 255, .05) 25%, rgba(0, 255, 255, .05) 26%, transparent 27%, transparent 74%, rgba(0, 255, 255, .05) 75%, rgba(0, 255, 255, .05) 76%, transparent 77%, transparent), linear-gradient(90deg, transparent 24%, rgba(0, 255, 255, .05) 25%, rgba(0, 255, 255, .05) 26%, transparent 27%, transparent 74%, rgba(0, 255, 255, .05) 75%, rgba(0, 255, 255, .05) 76%, transparent 77%, transparent);
-            background-size: 50px 50px;
+        * { -webkit-tap-highlight-color: transparent; }
+        body { touch-action: manipulation; }
+        @keyframes pulse-neon {
+            0%, 100% { text-shadow: 0 0 10px #00F0FF, 0 0 20px #00F0FF; }
+            50% { text-shadow: 0 0 20px #00F0FF, 0 0 40px #00F0FF, 0 0 60px #00F0FF; }
         }
-        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .btn-neon { background: linear-gradient(45deg, #ff00cc, #3333ff); box-shadow: 0 0 20px rgba(255, 0, 204, 0.4); transition: all 0.3s ease; }
-        #qrcode img { margin: 0 auto; border-radius: 12px; border: 4px solid white; }
+        .neon-text { animation: pulse-neon 2s ease-in-out infinite; }
     </style>
 </head>
-<body class="neon-grid">
-
-    <section class="min-h-screen flex flex-col items-center justify-center p-6 text-center">
-        <div class="mb-8">
-            <h1 class="font-retro text-5xl md:text-7xl mb-2 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-pink-500 uppercase">TriviaFlow</h1>
-            <p class="text-cyan-400 tracking-widest text-xs uppercase">System Status: R&B Archive Active</p>
-        </div>
-
-        <div class="glass p-8 rounded-3xl max-w-sm w-full mb-10 border-cyan-500/30">
-            <div id="qrcode" class="flex justify-center mb-6"></div>
-            
-            <p class="text-[10px] text-gray-400 uppercase tracking-widest mb-6 italic">Scan to play on your phone at the lounge</p>
-            
-            <button onclick="document.getElementById('app-section').scrollIntoView()" class="btn-neon w-full py-4 rounded-full font-black text-white uppercase tracking-tighter">Enter The Archive</button>
-        </div>
-    </section>
-
-    <section id="app-section" class="min-h-screen p-6 pt-20">
-        <div class="max-w-4xl mx-auto text-center">
-            <h2 class="font-retro text-2xl mb-10 text-pink-500">SELECT ERA</h2>
-            <div id="category-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
-        </div>
-    </section>
-
-    <script>
-        // THE MAGIC QR CODE LOGIC
-        window.onload = function() {
-            // This detects your Vercel URL automatically!
-            const currentUrl = window.location.href;
-            new QRCode(document.getElementById("qrcode"), {
-                text: currentUrl,
-                width: 200,
-                height: 200,
-                colorDark : "#000000",
-                colorLight : "#ffffff",
-                correctLevel : QRCode.CorrectLevel.H
-            });
-        };
-
-        const eras = [1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009];
-        const grid = document.getElementById('category-grid');
+<body>
+    <div id="root"></div>
+    
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <script type="text/babel">
+        const { useState, useEffect } = React;
         
-        eras.forEach(year => {
-            const btn = document.createElement('button');
-            btn.className = "glass p-6 rounded-2xl font-retro text-xl text-cyan-400 hover:bg-cyan-400 hover:text-black transition-all";
-            btn.innerText = year;
-            btn.onclick = () => alert("Trivia for " + year + " is loading...");
-            grid.appendChild(btn);
-        });
+        const categories = [
+            { id: 'all', name: 'ALL ERAS', emoji: '🎵', color: 'from-purple-600 to-pink-600', years: null },
+            { id: '1995-1999', name: '1995-1999', emoji: '💿', color: 'from-pink-600 to-rose-600', years: [1995, 1996, 1997, 1998, 1999] },
+            { id: '2000-2004', name: '2000-2004', emoji: '📀', color: 'from-cyan-600 to-blue-600', years: [2000, 2001, 2002, 2003, 2004] },
+            { id: '2005-2009', name: '2005-2009', emoji: '🎤', color: 'from-purple-600 to-violet-600', years: [2005, 2006, 2007, 2008, 2009] },
+            { id: 'early-90s', name: 'EARLY 90s R&B', emoji: '💎', color: 'from-yellow-600 to-orange-600', years: [1995, 1996, 1997] },
+            { id: 'late-90s', name: 'LATE 90s R&B', emoji: '👑', color: 'from-green-600 to-emerald-600', years: [1998, 1999] },
+            { id: '2000s', name: '2000s R&B', emoji: '⭐', color: 'from-red-600 to-orange-600', years: [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009] },
+            { id: 'random', name: 'RANDOM MIX', emoji: '🎲', color: 'from-indigo-600 to-purple-600', years: null }
+        ];
+        
+        const triviaQuestions = [
+            {id: 1, year: 1995, genre: "R&B", difficulty: "easy", question: "Which group released the hit song 'Waterfalls' in 1995?", options: ["TLC", "SWV", "Xscape", "En Vogue"], answer: "TLC"},
+            {id: 2, year: 1995, genre: "R&B", difficulty: "easy", question: "Who sang 'Before You Walk Out of My Life' in 1995?", options: ["Monica", "Brandy", "Faith Evans", "Aaliyah"], answer: "Monica"},
+            {id: 3, year: 1995, genre: "R&B", difficulty: "medium", question: "Which artist released the album 'Brown Sugar' before breaking out even more in 1995?", options: ["D'Angelo", "Maxwell", "Joe", "Case"], answer: "D'Angelo"},
+            {id: 4, year: 1996, genre: "R&B", difficulty: "easy", question: "Who released 'Always Be My Baby' in 1996?", options: ["Mariah Carey", "Mary J. Blige", "Monica", "Brandy"], answer: "Mariah Carey"},
+            {id: 5, year: 1996, genre: "R&B", difficulty: "easy", question: "Which R&B artist had the hit 'Twisted' in 1996?", options: ["Keith Sweat", "R. Kelly", "Joe", "Ginuwine"], answer: "Keith Sweat"},
+            {id: 6, year: 1996, genre: "R&B", difficulty: "medium", question: "Which group released 'Get On Up' in 1996?", options: ["Jodeci", "Silk", "Jagged Edge", "112"], answer: "Jodeci"},
+            {id: 7, year: 1997, genre: "R&B", difficulty: "easy", question: "Who released 'Whenever, Wherever, Whatever' in 1997?", options: ["Maxwell", "D'Angelo", "Babyface", "Joe"], answer: "Maxwell"},
+            {id: 8, year: 1997, genre: "R&B", difficulty: "easy", question: "Which artist released 'Sock It 2 Me' in 1997?", options: ["Missy Elliott", "Lil' Kim", "Aaliyah", "Da Brat"], answer: "Missy Elliott"},
+            {id: 9, year: 1997, genre: "R&B", difficulty: "easy", question: "Who sang '4 Seasons of Loneliness' in 1997?", options: ["Boyz II Men", "Dru Hill", "112", "Jagged Edge"], answer: "Boyz II Men"},
+            {id: 10, year: 1998, genre: "R&B", difficulty: "easy", question: "Who released 'Are You That Somebody?' in 1998?", options: ["Aaliyah", "Brandy", "Mya", "Monica"], answer: "Aaliyah"},
+            {id: 11, year: 1998, genre: "R&B", difficulty: "easy", question: "Which artist sang 'The Boy Is Mine' with Monica?", options: ["Brandy", "Aaliyah", "Mya", "Faith Evans"], answer: "Brandy"},
+            {id: 12, year: 1998, genre: "R&B", difficulty: "medium", question: "Which male R&B singer broke out with 'My Way' in 1998?", options: ["Usher", "Ginuwine", "Joe", "Tyrese"], answer: "Usher"},
+            {id: 13, year: 1999, genre: "R&B", difficulty: "easy", question: "Who released the song 'Bills, Bills, Bills' in 1999?", options: ["Destiny's Child", "TLC", "702", "SWV"], answer: "Destiny's Child"},
+            {id: 14, year: 1999, genre: "R&B", difficulty: "easy", question: "Which artist sang 'Fortunate' in 1999?", options: ["Maxwell", "D'Angelo", "Joe", "Case"], answer: "Maxwell"},
+            {id: 15, year: 1999, genre: "R&B", difficulty: "medium", question: "Which group released 'Anywhere' in 1999?", options: ["112", "Jagged Edge", "Dru Hill", "Next"], answer: "112"},
+            {id: 16, year: 2000, genre: "R&B", difficulty: "easy", question: "Who released 'Say My Name' in 2000?", options: ["Destiny's Child", "TLC", "702", "SWV"], answer: "Destiny's Child"},
+            {id: 17, year: 2000, genre: "R&B", difficulty: "easy", question: "Which artist released 'He Wasn't Man Enough' in 2000?", options: ["Toni Braxton", "Whitney Houston", "Monica", "Brandy"], answer: "Toni Braxton"},
+            {id: 18, year: 2000, genre: "R&B", difficulty: "medium", question: "Who sang the hit 'Incomplete' in 2000?", options: ["Sisqó", "Tyrese", "Usher", "Joe"], answer: "Sisqó"},
+            {id: 19, year: 2001, genre: "R&B", difficulty: "easy", question: "Who released 'Fallin'' in 2001?", options: ["Alicia Keys", "Ashanti", "Mary J. Blige", "Amerie"], answer: "Alicia Keys"},
+            {id: 20, year: 2001, genre: "R&B", difficulty: "easy", question: "Which artist released 'U Remind Me' in 2001?", options: ["Usher", "Mario", "Tyrese", "Joe"], answer: "Usher"},
+            {id: 21, year: 2001, genre: "R&B", difficulty: "medium", question: "Who released the album 'Songs in A Minor' in 2001?", options: ["Alicia Keys", "India.Arie", "Angie Stone", "Jill Scott"], answer: "Alicia Keys"},
+            {id: 22, year: 2002, genre: "R&B", difficulty: "easy", question: "Who released 'Foolish' in 2002?", options: ["Ashanti", "Amerie", "Mya", "Monica"], answer: "Ashanti"},
+            {id: 23, year: 2002, genre: "R&B", difficulty: "easy", question: "Which singer released 'Bump, Bump, Bump' with B2K in 2002?", options: ["P. Diddy", "Usher", "R. Kelly", "Jermaine Dupri"], answer: "P. Diddy"},
+            {id: 24, year: 2002, genre: "R&B", difficulty: "medium", question: "Which neo-soul singer released 'Video' before winning over R&B fans in the early 2000s?", options: ["India.Arie", "Jill Scott", "Erykah Badu", "Goapele"], answer: "India.Arie"},
+            {id: 25, year: 2003, genre: "R&B", difficulty: "easy", question: "Who released 'Crazy in Love' in 2003?", options: ["Beyoncé", "Ashanti", "Alicia Keys", "Mya"], answer: "Beyoncé"},
+            {id: 26, year: 2003, genre: "R&B", difficulty: "easy", question: "Which artist released 'Rock Wit U (Awww Baby)' in 2003?", options: ["Ashanti", "702", "Cherish", "SWV"], answer: "Ashanti"},
+            {id: 27, year: 2003, genre: "R&B", difficulty: "medium", question: "Who sang 'Into You' in 2003?", options: ["Fabolous featuring Tamia", "Ja Rule featuring Ashanti", "Joe featuring Kelly Rowland", "Usher featuring Alicia Keys"], answer: "Fabolous featuring Tamia"},
+            {id: 28, year: 2004, genre: "R&B", difficulty: "easy", question: "Who released 'Burn' in 2004?", options: ["Usher", "Mario", "Omarion", "Joe"], answer: "Usher"},
+            {id: 29, year: 2004, genre: "R&B", difficulty: "easy", question: "Which singer released 'If I Ain't Got You' in 2004?", options: ["Alicia Keys", "Beyoncé", "Ashanti", "Amerie"], answer: "Alicia Keys"},
+            {id: 30, year: 2004, genre: "R&B", difficulty: "medium", question: "Which artist released '1 Thing' in 2005 after building buzz in 2004?", options: ["Amerie", "Ciara", "Teairra Mari", "Mya"], answer: "Amerie"},
+            {id: 31, year: 2005, genre: "R&B", difficulty: "easy", question: "Who released 'We Belong Together' in 2005?", options: ["Mariah Carey", "Mary J. Blige", "Faith Evans", "Alicia Keys"], answer: "Mariah Carey"},
+            {id: 32, year: 2005, genre: "R&B", difficulty: "easy", question: "Which artist released '1 Thing' in 2005?", options: ["Amerie", "Ciara", "Ashanti", "Keyshia Cole"], answer: "Amerie"},
+            {id: 33, year: 2005, genre: "R&B", difficulty: "medium", question: "Who released the debut album 'The Way It Is' in 2005?", options: ["Keyshia Cole", "Ciara", "Cassie", "Teairra Mari"], answer: "Keyshia Cole"},
+            {id: 34, year: 2005, genre: "R&B", difficulty: "medium", question: "Which singer released 'Ordinary People' in 2005?", options: ["John Legend", "Anthony Hamilton", "Raheem DeVaughn", "Musiq Soulchild"], answer: "John Legend"},
+            {id: 35, year: 2006, genre: "R&B", difficulty: "easy", question: "Who released 'Be Without You' in 2006?", options: ["Mary J. Blige", "Mariah Carey", "Faith Evans", "Monica"], answer: "Mary J. Blige"},
+            {id: 36, year: 2006, genre: "R&B", difficulty: "easy", question: "Which artist released 'So Sick' in 2006?", options: ["Ne-Yo", "Mario", "Chris Brown", "Usher"], answer: "Ne-Yo"},
+            {id: 37, year: 2006, genre: "R&B", difficulty: "medium", question: "Who released 'Say I' in 2006?", options: ["Christina Milian", "Amerie", "Cassie", "Mya"], answer: "Christina Milian"},
+            {id: 38, year: 2007, genre: "R&B", difficulty: "easy", question: "Who released 'No One' in 2007?", options: ["Alicia Keys", "Beyoncé", "Keyshia Cole", "Fantasia"], answer: "Alicia Keys"},
+            {id: 39, year: 2007, genre: "R&B", difficulty: "easy", question: "Which singer released 'Bed' in 2007?", options: ["J. Holiday", "Ne-Yo", "Trey Songz", "Mario"], answer: "J. Holiday"},
+            {id: 40, year: 2007, genre: "R&B", difficulty: "medium", question: "Who released 'Just Fine' in 2007?", options: ["Mary J. Blige", "Monica", "Faith Evans", "Fantasia"], answer: "Mary J. Blige"},
+            {id: 41, year: 2008, genre: "R&B", difficulty: "easy", question: "Who released 'Spotlight' in 2008?", options: ["Jennifer Hudson", "Beyoncé", "Keyshia Cole", "Ashanti"], answer: "Jennifer Hudson"},
+            {id: 42, year: 2008, genre: "R&B", difficulty: "easy", question: "Which artist released 'Miss Independent' in 2008?", options: ["Ne-Yo", "Chris Brown", "Mario", "Usher"], answer: "Ne-Yo"},
+            {id: 43, year: 2008, genre: "R&B", difficulty: "medium", question: "Who released the song 'Heaven Sent' in 2008?", options: ["Keyshia Cole", "Fantasia", "Monica", "Ashanti"], answer: "Keyshia Cole"},
+            {id: 44, year: 2009, genre: "R&B", difficulty: "easy", question: "Who released 'Pretty Wings' in 2009?", options: ["Maxwell", "John Legend", "Ne-Yo", "Trey Songz"], answer: "Maxwell"},
+            {id: 45, year: 2009, genre: "R&B", difficulty: "easy", question: "Which singer released 'Birthday Sex' in 2009?", options: ["Jeremih", "The-Dream", "Pleasure P", "Trey Songz"], answer: "Jeremih"},
+            {id: 46, year: 2009, genre: "R&B", difficulty: "medium", question: "Who released 'Blame It' with T-Pain in 2009?", options: ["Jamie Foxx", "Ne-Yo", "Chris Brown", "Usher"], answer: "Jamie Foxx"},
+            {id: 47, year: 1996, genre: "R&B", difficulty: "medium", question: "Who released 'Nobody' in 1996?", options: ["Keith Sweat featuring Athena Cage", "R. Kelly", "Joe", "Babyface"], answer: "Keith Sweat featuring Athena Cage"},
+            {id: 49, year: 2003, genre: "R&B", difficulty: "medium", question: "Who released 'Dance with My Father' in 2003?", options: ["Luther Vandross", "Babyface", "Gerald Levert", "Brian McKnight"], answer: "Luther Vandross"},
+            {id: 50, year: 2008, genre: "R&B", difficulty: "medium", question: "Which artist released 'Trading Places' in 2008?", options: ["Usher", "Ne-Yo", "Robin Thicke", "The-Dream"], answer: "Usher"}
+        ];
+
+        function MusicTrivia() {
+            const [gameState, setGameState] = useState('category');
+            const [selectedCategory, setSelectedCategory] = useState(null);
+            const [currentQ, setCurrentQ] = useState(0);
+            const [score, setScore] = useState(0);
+            const [selected, setSelected] = useState(null);
+            const [showAnswer, setShowAnswer] = useState(false);
+            const [timer, setTimer] = useState(15);
+            const [questions, setQuestions] = useState([]);
+
+            useEffect(() => {
+                if (gameState === 'playing' && !showAnswer && timer > 0) {
+                    const interval = setInterval(() => setTimer(t => t - 1), 1000);
+                    return () => clearInterval(interval);
+                }
+                if (timer === 0 && !showAnswer) setShowAnswer(true);
+            }, [timer, showAnswer, gameState]);
+
+            const selectCategory = (categoryId) => {
+                setSelectedCategory(categoryId);
+                setGameState('start');
+            };
+
+            const startGame = () => {
+                const cat = categories.find(c => c.id === selectedCategory);
+                let filtered;
+                
+                if (cat.years) {
+                    filtered = triviaQuestions.filter(q => cat.years.includes(q.year));
+                } else {
+                    filtered = triviaQuestions;
+                }
+                
+                const shuffled = [...filtered].sort(() => Math.random() - 0.5);
+                setQuestions(shuffled.slice(0, 10));
+                setGameState('playing');
+                setCurrentQ(0);
+                setScore(0);
+                setSelected(null);
+                setShowAnswer(false);
+                setTimer(15);
+            };
+
+            const selectAnswer = (idx) => {
+                if (showAnswer || selected !== null) return;
+                setSelected(idx);
+                setShowAnswer(true);
+                if (questions[currentQ].options[idx] === questions[currentQ].answer) {
+                    setScore(score + 1);
+                }
+            };
+
+            const nextQuestion = () => {
+                if (currentQ < questions.length - 1) {
+                    setCurrentQ(currentQ + 1);
+                    setSelected(null);
+                    setShowAnswer(false);
+                    setTimer(15);
+                } else {
+                    setGameState('finished');
+                }
+            };
+
+            const backToCategories = () => {
+                setGameState('category');
+                setSelectedCategory(null);
+            };
+
+            const getButtonClass = (idx) => {
+                const base = 'w-full p-4 rounded-xl font-bold text-lg transition-all duration-300 border-2';
+                if (!showAnswer) return `${base} bg-gradient-to-r from-purple-600 to-pink-600 border-purple-400 active:scale-95 text-white`;
+                const correctIdx = questions[currentQ].options.indexOf(questions[currentQ].answer);
+                if (idx === correctIdx) return `${base} bg-green-600 border-green-400 text-white`;
+                if (idx === selected && idx !== correctIdx) return `${base} bg-red-600 border-red-400 text-white`;
+                return `${base} bg-gray-700 border-gray-600 text-gray-300`;
+            };
+
+            if (gameState === 'category') {
+                return (
+                    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 p-6">
+                        <div className="max-w-2xl mx-auto">
+                            <div className="text-center mb-12 mt-8">
+                                <h1 className="text-6xl font-black mb-4" style={{
+                                    background: 'linear-gradient(90deg, #00F0FF, #FF10F0)',
+                                    WebkitBackgroundClip: 'text',
+                                    WebkitTextFillColor: 'transparent'
+                                }}>
+                                    R&B TRIVIA
+                                </h1>
+                                <p className="text-cyan-400 text-xl neon-text uppercase tracking-widest">Select An Era</p>
+                                <p className="text-gray-400 mt-2">1995-2009 R&B Classics</p>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-4">
+                                {categories.map(cat => (
+                                    <button
+                                        key={cat.id}
+                                        onClick={() => selectCategory(cat.id)}
+                                        className={`bg-gradient-to-br ${cat.color} p-6 rounded-2xl border-2 border-cyan-400/30 hover:border-cyan-400 hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-cyan-400/50`}
+                                    >
+                                        <div className="text-5xl mb-3">{cat.emoji}</div>
+                                        <div className="text-white font-black text-lg tracking-wider">{cat.name}</div>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (gameState === 'start') {
+                const selectedCat = categories.find(c => c.id === selectedCategory);
+                return (
+                    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-pink-900 to-red-900 flex items-center justify-center p-4">
+                        <div className="max-w-md w-full text-center space-y-6">
+                            <div className="text-8xl">{selectedCat.emoji}</div>
+                            <h1 className="text-5xl font-black text-white">{selectedCat.name}</h1>
+                            <div className="bg-black/30 backdrop-blur-sm rounded-2xl p-6 space-y-3">
+                                <div className="flex items-center justify-center gap-2 text-white text-lg">⚡ 10 Questions</div>
+                                <div className="flex items-center justify-center gap-2 text-white text-lg">⏱️ 15 Seconds Each</div>
+                                <div className="flex items-center justify-center gap-2 text-white text-lg">🎤 Classic R&B Hits</div>
+                            </div>
+                            <button onClick={startGame} className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-black text-xl py-4 rounded-full hover:scale-105 transition shadow-2xl">
+                                START GAME
+                            </button>
+                            <button onClick={backToCategories} className="w-full bg-gray-700 text-white font-bold text-lg py-3 rounded-full hover:bg-gray-600 transition">
+                                ← Back to Eras
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (gameState === 'finished') {
+                const percentage = Math.round((score / questions.length) * 100);
+                return (
+                    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-pink-900 to-red-900 flex items-center justify-center p-4">
+                        <div className="max-w-md w-full text-center space-y-6">
+                            <div className="text-8xl">🏆</div>
+                            <h1 className="text-5xl font-black text-white">FINISHED!</h1>
+                            <div className="bg-black/30 backdrop-blur-sm rounded-2xl p-8 space-y-4">
+                                <div className="text-7xl font-black text-yellow-400">{score}/{questions.length}</div>
+                                <div className="text-3xl font-bold text-white">{percentage}%</div>
+                                <div className="text-2xl text-pink-300">
+                                    {percentage >= 80 ? "🎤 R&B LEGEND!" : percentage >= 60 ? "💿 Soul Music Fan!" : percentage >= 40 ? "🎵 Getting There!" : "📻 Keep Listening!"}
+                                </div>
+                            </div>
+                            <button onClick={startGame} className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-black text-xl py-4 rounded-full hover:scale-105 transition shadow-2xl">
+                                PLAY AGAIN
+                            </button>
+                            <button onClick={backToCategories} className="w-full bg-gray-700 text-white font-bold text-lg py-3 rounded-full hover:bg-gray-600 transition">
+                                ← Choose Different Era
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
+
+            const question = questions[currentQ];
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-purple-900 via-pink-900 to-red-900 p-4">
+                    <div className="max-w-2xl mx-auto py-6 space-y-6">
+                        <div className="flex justify-between items-center">
+                            <div className="bg-black/40 backdrop-blur-sm px-4 py-2 rounded-xl">
+                                <div className="text-lg font-bold text-white">Q {currentQ + 1}/{questions.length}</div>
+                            </div>
+                            <div className="bg-black/40 backdrop-blur-sm px-4 py-2 rounded-xl">
+                                <div className="text-sm text-cyan-400">{question.year}</div>
+                            </div>
+                            <div className="bg-black/40 backdrop-blur-sm px-4 py-2 rounded-xl">
+                                <div className="text-lg font-bold text-yellow-400">Score: {score}</div>
+                            </div>
+                        </div>
+                        <div className="bg-black/40 backdrop-blur-sm rounded-xl p-4">
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="text-white font-bold">⏱️ Time Left</span>
+                                <span className={`text-2xl font-black ${timer <= 5 ? 'text-red-400 animate-pulse' : 'text-yellow-400'}`}>{timer}s</span>
+                            </div>
+                            <div className="h-3 bg-gray-700 rounded-full overflow-hidden">
+                                <div className={`h-full transition-all duration-1000 ${timer <= 5 ? 'bg-red-500' : 'bg-yellow-400'}`} style={{width: `${(timer/15)*100}%`}}/>
+                            </div>
+                        </div>
+                        <div className="bg-black/50 backdrop-blur-sm rounded-2xl p-6 shadow-2xl">
+                            <h2 className="text-2xl md:text-3xl font-black text-white text-center leading-tight">{question.question}</h2>
+                        </div>
+                        <div className="space-y-3">
+                            {question.options.map((option, idx) => (
+                                <button key={idx} onClick={() => selectAnswer(idx)} disabled={showAnswer} className={getButtonClass(idx)}>
+                                    {option}
+                                </button>
+                            ))}
+                        </div>
+                        {showAnswer && (
+                            <button onClick={nextQuestion} className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-black text-xl py-4 rounded-full hover:scale-105 transition shadow-2xl">
+                                {currentQ < questions.length - 1 ? 'NEXT QUESTION →' : 'SEE RESULTS'}
+                            </button>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<MusicTrivia />, document.getElementById('root'));
     </script>
 </body>
 </html>
