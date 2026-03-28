@@ -202,8 +202,25 @@
                 } else {
                     filtered = triviaQuestions;
                 }
-                const shuffled = [...filtered].sort(() => Math.random() - 0.5);
-                setQuestions(shuffled.slice(0, 10));
+                
+                // Shuffle questions and randomize answer positions
+                const shuffled = [...filtered].sort(() => Math.random() - 0.5).slice(0, 10);
+                
+                // Randomize answer order for each question
+                const questionsWithShuffledAnswers = shuffled.map(q => {
+                    const correctAnswer = q.answer;
+                    const shuffledOptions = [...q.options].sort(() => Math.random() - 0.5);
+                    const newCorrectIndex = shuffledOptions.indexOf(correctAnswer);
+                    
+                    return {
+                        ...q,
+                        options: shuffledOptions,
+                        correctIndex: newCorrectIndex,
+                        correctAnswer: correctAnswer
+                    };
+                });
+                
+                setQuestions(questionsWithShuffledAnswers);
                 setGameState('playing');
                 setCurrentQ(0);
                 setScore(0);
@@ -216,7 +233,7 @@
                 if (showAnswer || selected !== null) return;
                 setSelected(idx);
                 setShowAnswer(true);
-                if (questions[currentQ].options[idx] === questions[currentQ].answer) {
+                if (idx === questions[currentQ].correctIndex) {
                     setScore(score + 1);
                 }
             };
@@ -247,7 +264,7 @@
             const getButtonClass = (idx) => {
                 const base = 'w-full p-4 rounded-xl font-bold text-lg transition-all duration-300 border-2';
                 if (!showAnswer) return `${base} bg-gradient-to-r from-purple-600 to-pink-600 border-purple-400 active:scale-95 text-white`;
-                const correctIdx = questions[currentQ].options.indexOf(questions[currentQ].answer);
+                const correctIdx = questions[currentQ].correctIndex;
                 if (idx === correctIdx) return `${base} bg-green-600 border-green-400 text-white`;
                 if (idx === selected && idx !== correctIdx) return `${base} bg-red-600 border-red-400 text-white`;
                 return `${base} bg-gray-700 border-gray-600 text-gray-300`;
