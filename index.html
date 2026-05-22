@@ -318,7 +318,8 @@ function MusicTrivia() {
   );
 
   if (gameState === 'landing') {
-    const qr = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent('https://trivia-flow-sigma.vercel.app/')}`;
+    // ── UPDATED QR CODE URL TO triviaflow.app ──
+    const qr = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent('https://www.triviaflow.app')}`;
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-black p-6 flex items-center justify-center">
         <div className="max-w-2xl w-full space-y-6">
@@ -337,11 +338,11 @@ function MusicTrivia() {
             <p className="text-gray-500 text-xs text-center mt-3">Wrong answer or timeout = 0 pts</p>
           </div>
           <div className="bg-black/40 backdrop-blur-sm rounded-3xl p-8 border-2 border-pink-400/30 text-center">
-            <h2 className="text-2xl font-bold text-white mb-4">Share with Friends</h2>
+            <h2 className="text-2xl font-bold text-white mb-4">📱 Scan to Play</h2>
             <div className="bg-white p-4 rounded-2xl inline-block" style={{boxShadow:'0 0 40px rgba(0,240,255,0.4)'}}>
               <img src={qr} alt="Scan to play" className="w-48 h-48" loading="lazy" />
             </div>
-            <p className="text-cyan-400 text-sm uppercase tracking-wider mt-3">Scan to Play</p>
+            <p className="text-cyan-400 text-sm uppercase tracking-wider mt-3">triviaflow.app</p>
           </div>
           <div className="bg-black/40 backdrop-blur-sm rounded-3xl p-8 border-2 border-cyan-400/30">
             <h2 className="text-2xl font-bold text-white mb-6">Enter Your Name</h2>
@@ -351,7 +352,7 @@ function MusicTrivia() {
               className="w-full px-6 py-4 rounded-xl bg-gray-800 border-2 border-purple-500 text-white text-xl focus:outline-none focus:border-cyan-400 mb-4" />
             <button onClick={() => { if (playerName.trim()) setGameState('category'); }} disabled={!playerName.trim()}
               className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-black text-2xl py-5 rounded-xl hover:scale-105 transition shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed">
-              START PLAYING
+              START PLAYING 🎵
             </button>
           </div>
           <Board />
