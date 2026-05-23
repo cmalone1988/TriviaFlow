@@ -44,9 +44,11 @@ const SUPABASE_URL = 'https://elalicgeulykztwotqju.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVsYWxpY2dldWx5a3p0d290cWp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3ODE2NDIsImV4cCI6MjA5NDM1NzY0Mn0.4798w9-avRkhilLs2j7AnE2oHe6WRgYteEor754b800';
 const HEADERS = { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` };
 
-async function getLeaderboard() {
+// Fetch leaderboard filtered by category
+async function getLeaderboard(categoryId) {
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/Leaderboard?order=total_points.desc&limit=20`, { headers: HEADERS });
+    const filter = categoryId ? `&category=eq.${encodeURIComponent(categoryId)}` : '';
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/Leaderboard?order=total_points.desc&limit=10${filter}`, { headers: HEADERS });
     const data = await res.json();
     return Array.isArray(data) ? data : [];
   } catch(e) { return []; }
@@ -199,19 +201,32 @@ function MusicTrivia() {
   const [savingScore, setSavingScore] = useState(false);
   const [lastPts, setLastPts] = useState(null);
   const [showPtsPop, setShowPtsPop] = useState(false);
+  // Landing leaderboard tabs
+  const [activeLandingTab, setActiveLandingTab] = useState('all');
+  const [tabBoards, setTabBoards] = useState({});
+  const [tabLoading, setTabLoading] = useState({});
   const timerRef = useRef(MAX_TIME);
   const pointsRef = useRef(0);
   const correctRef = useRef(0);
 
-  const refreshBoard = useCallback(async () => {
+  // Load leaderboard for a specific category (used post-game)
+  const refreshBoard = useCallback(async (catId) => {
     setBoardLoading(true);
-    const data = await getLeaderboard();
+    const data = await getLeaderboard(catId);
     setLeaderboard(Array.isArray(data) ? data : []);
     setBoardLoading(false);
   }, []);
 
-  useEffect(() => { refreshBoard(); }, []);
-  useEffect(() => { if (gameState === 'landing') refreshBoard(); }, [gameState]);
+  // Load a tab on the landing page
+  const loadTab = useCallback(async (catId) => {
+    if (tabBoards[catId]) return; // already loaded
+    setTabLoading(prev => ({ ...prev, [catId]: true }));
+    const data = await getLeaderboard(catId === 'all' ? null : catId);
+    setTabBoards(prev => ({ ...prev, [catId]: Array.isArray(data) ? data : [] }));
+    setTabLoading(prev => ({ ...prev, [catId]: false }));
+  }, [tabBoards]);
+
+  useEffect(() => { loadTab('all'); }, []);
 
   useEffect(() => {
     if (gameState !== 'playing' || showAnswer) return;
@@ -255,7 +270,7 @@ function MusicTrivia() {
         total_questions: questions.length,
         category: selectedCategory
       });
-      await refreshBoard();
+      await refreshBoard(selectedCategory);
       setSavingScore(false);
       setGameState('finished');
     }
@@ -286,24 +301,90 @@ function MusicTrivia() {
 
   const medal = (i) => ['🥇','🥈','🥉'][i] || `#${i+1}`;
 
-  const Board = ({ hName, hPts }) => (
-    <div className="bg-black/40 backdrop-blur-sm rounded-3xl p-6 border-2 border-yellow-400/30">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-black text-yellow-400">🏆 LEADERBOARD</h2>
-        <button onClick={refreshBoard} className="text-xs text-cyan-400 underline">Refresh</button>
+  // ── POST-GAME LEADERBOARD (filtered to played category) ───────────────────
+  const PostGameBoard = ({ hName, hPts }) => {
+    const cat = categories.find(c => c.id === selectedCategory);
+    return (
+      <div className="bg-black/40 backdrop-blur-sm rounded-3xl p-6 border-2 border-yellow-400/30">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-xl font-black text-yellow-400">🏆 {cat?.name} LEADERBOARD</h2>
+            <p className="text-xs text-gray-400 mt-1">Top scores in this category</p>
+          </div>
+          <button onClick={() => refreshBoard(selectedCategory)} className="text-xs text-cyan-400 underline">↻ Refresh</button>
+        </div>
+        {boardLoading ? (
+          <div className="text-center py-6"><div className="text-4xl spinner inline-block">⏳</div><p className="text-gray-400 mt-2">Loading...</p></div>
+        ) : leaderboard.length === 0 ? (
+          <p className="text-gray-400 text-center py-4">No scores yet in this category!</p>
+        ) : leaderboard.slice(0, 10).map((e, i) => {
+          const me = hName && e.name === hName && e.total_points === hPts;
+          return (
+            <div key={i} className={`flex items-center justify-between p-3 rounded-xl mb-2 ${me ? 'bg-yellow-400/20 border-2 border-yellow-400' : 'bg-gray-800/50'}`}>
+              <div className="flex items-center gap-3">
+                <span className={`text-lg font-black w-8 ${i===0?'text-yellow-400':i===1?'text-gray-300':i===2?'text-orange-400':'text-gray-500'}`}>{medal(i)}</span>
+                <div>
+                  <div className="text-white font-bold text-sm">{e.name}{me?' YOU':''}</div>
+                  <div className="text-xs text-gray-400">{e.correct_count}/{e.total_questions} correct</div>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-lg font-black text-cyan-400">{e.total_points?.toLocaleString()}</div>
+                <div className="text-xs text-gray-500">pts</div>
+              </div>
+            </div>
+          );
+        })}
       </div>
-      {boardLoading ? (
-        <div className="text-center py-6"><div className="text-4xl spinner inline-block">⏳</div><p className="text-gray-400 mt-2">Loading scores...</p></div>
-      ) : leaderboard.length === 0 ? (
-        <p className="text-gray-400 text-center py-4">No scores yet — be the first! 🎤</p>
-      ) : leaderboard.slice(0, 10).map((e, i) => {
-        const me = hName && e.name === hName && e.total_points === hPts;
-        return (
-          <div key={i} className={`flex items-center justify-between p-3 rounded-xl mb-2 ${me ? 'bg-yellow-400/20 border-2 border-yellow-400' : 'bg-gray-800/50'}`}>
+    );
+  };
+
+  // ── LANDING LEADERBOARD WITH TABS ─────────────────────────────────────────
+  const LandingBoard = () => {
+    const tabList = [
+      { id: 'all', label: 'ALL', emoji: '🎵' },
+      { id: '1990-1994', label: '90-94', emoji: '💎' },
+      { id: '1995-1999', label: '95-99', emoji: '💿' },
+      { id: '2000-2004', label: '00-04', emoji: '📀' },
+      { id: '2005-2010', label: '05-10', emoji: '🎤' },
+      { id: 'late-90s', label: 'LATE 90s', emoji: '👑' },
+      { id: '2000s', label: '2000s', emoji: '⭐' },
+      { id: 'random', label: 'RANDOM', emoji: '🎲' },
+    ];
+
+    const handleTab = (id) => {
+      setActiveLandingTab(id);
+      loadTab(id);
+    };
+
+    const currentData = tabBoards[activeLandingTab] || [];
+    const isLoading = tabLoading[activeLandingTab];
+
+    return (
+      <div className="bg-black/40 backdrop-blur-sm rounded-3xl p-6 border-2 border-yellow-400/30">
+        <h2 className="text-2xl font-black text-yellow-400 mb-4">🏆 LEADERBOARDS</h2>
+
+        {/* Tabs */}
+        <div className="flex flex-wrap gap-2 mb-5">
+          {tabList.map(tab => (
+            <button key={tab.id} onClick={() => handleTab(tab.id)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all ${activeLandingTab === tab.id ? 'bg-yellow-400 text-black' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}`}>
+              {tab.emoji} {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Board content */}
+        {isLoading ? (
+          <div className="text-center py-6"><div className="text-3xl spinner inline-block">⏳</div><p className="text-gray-400 mt-2">Loading...</p></div>
+        ) : currentData.length === 0 ? (
+          <p className="text-gray-400 text-center py-4">No scores yet — be the first! 🎤</p>
+        ) : currentData.slice(0, 10).map((e, i) => (
+          <div key={i} className="flex items-center justify-between p-3 rounded-xl mb-2 bg-gray-800/50">
             <div className="flex items-center gap-3">
               <span className={`text-lg font-black w-8 ${i===0?'text-yellow-400':i===1?'text-gray-300':i===2?'text-orange-400':'text-gray-500'}`}>{medal(i)}</span>
               <div>
-                <div className="text-white font-bold text-sm">{e.name}{me ? ' YOU' : ''}</div>
+                <div className="text-white font-bold text-sm">{e.name}</div>
                 <div className="text-xs text-gray-400">{e.correct_count}/{e.total_questions} correct</div>
               </div>
             </div>
@@ -312,13 +393,13 @@ function MusicTrivia() {
               <div className="text-xs text-gray-500">pts</div>
             </div>
           </div>
-        );
-      })}
-    </div>
-  );
+        ))}
+      </div>
+    );
+  };
 
+  // ── LANDING ───────────────────────────────────────────────────────────────
   if (gameState === 'landing') {
-    // ── UPDATED QR CODE URL TO triviaflow.app ──
     const qr = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent('https://www.triviaflow.app')}`;
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-black p-6 flex items-center justify-center">
@@ -326,10 +407,10 @@ function MusicTrivia() {
           <div className="text-center slide-up">
             <h1 className="text-7xl md:text-8xl font-black mb-2" style={{background:'linear-gradient(135deg,#00F0FF,#FF10F0,#FFFF00)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>R&B TRIVIA</h1>
             <p className="text-cyan-400 text-2xl neon-text uppercase tracking-widest mb-1">1990-2010 Classics</p>
-            <p className="text-gray-400">Speed Scoring · Global Leaderboard · Max 17,500 pts</p>
+            <p className="text-gray-400">Speed Scoring · Category Leaderboards · Max 17,500 pts</p>
           </div>
           <div className="bg-black/40 backdrop-blur-sm rounded-3xl p-5 border-2 border-purple-400/30">
-            <h3 className="text-base font-black text-purple-300 mb-3 uppercase tracking-wider">Speed Scoring — Answer Fast, Score More</h3>
+            <h3 className="text-base font-black text-purple-300 mb-3 uppercase tracking-wider">⚡ Speed Scoring — Answer Fast, Score More</h3>
             <div className="grid grid-cols-3 gap-3 text-center">
               <div className="bg-gray-800/60 rounded-xl p-3"><div className="text-yellow-400 font-black text-xl">1,750</div><div className="text-gray-400 text-xs mt-1">Answer in 1s</div></div>
               <div className="bg-gray-800/60 rounded-xl p-3"><div className="text-cyan-400 font-black text-xl">1,400</div><div className="text-gray-400 text-xs mt-1">Answer in 7s</div></div>
@@ -355,12 +436,13 @@ function MusicTrivia() {
               START PLAYING 🎵
             </button>
           </div>
-          <Board />
+          <LandingBoard />
         </div>
       </div>
     );
   }
 
+  // ── CATEGORY ──────────────────────────────────────────────────────────────
   if (gameState === 'category') return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 p-6">
       <div className="max-w-2xl mx-auto">
@@ -382,6 +464,7 @@ function MusicTrivia() {
     </div>
   );
 
+  // ── START ─────────────────────────────────────────────────────────────────
   if (gameState === 'start') {
     const cat = categories.find(c => c.id === selectedCategory);
     return (
@@ -402,6 +485,7 @@ function MusicTrivia() {
     );
   }
 
+  // ── FINISHED ──────────────────────────────────────────────────────────────
   if (gameState === 'finished') {
     const rank = leaderboard.findIndex(e => e.name === playerName && e.total_points === totalPoints) + 1;
     const pct = Math.round((correctCount / questions.length) * 100);
@@ -416,13 +500,13 @@ function MusicTrivia() {
               <div className="text-6xl font-black text-yellow-400">{totalPoints.toLocaleString()}</div>
               <div className="text-xl text-cyan-400 font-bold uppercase tracking-wider">Points</div>
               <div className="text-lg text-white">{correctCount}/{questions.length} correct · {pct}%</div>
-              {rank > 0 && rank <= 20 && <div className="text-xl text-green-400">You are #{rank} on the leaderboard!</div>}
+              {rank > 0 && rank <= 10 && <div className="text-xl text-green-400">You are #{rank} in this category!</div>}
               <div className="text-2xl text-pink-300">{pct>=80?"R&B LEGEND!":pct>=60?"Soul Music Fan!":pct>=40?"Getting There!":"Keep Listening!"}</div>
             </div>
           </div>
           {savingScore ? (
             <div className="text-center py-4"><div className="text-3xl spinner inline-block">💾</div><p className="text-cyan-400 mt-2">Saving score...</p></div>
-          ) : <Board hName={playerName} hPts={totalPoints} />}
+          ) : <PostGameBoard hName={playerName} hPts={totalPoints} />}
           <button onClick={startGame} className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-black text-xl py-4 rounded-full hover:scale-105 transition shadow-2xl">PLAY AGAIN</button>
           <button onClick={() => { setGameState('category'); setSelectedCategory(null); }} className="w-full bg-gray-700 text-white font-bold text-lg py-3 rounded-full hover:bg-gray-600 transition">Choose Different Era</button>
           <button onClick={() => { setGameState('landing'); setPlayerName(''); setSelectedCategory(null); }} className="w-full bg-gray-800 text-white font-bold py-3 rounded-full hover:bg-gray-700 transition">Back to Home</button>
@@ -431,6 +515,7 @@ function MusicTrivia() {
     );
   }
 
+  // ── PLAYING ───────────────────────────────────────────────────────────────
   const q = questions[currentQ];
   const potential = calcPoints(timer);
 
