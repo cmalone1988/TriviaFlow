@@ -79,7 +79,7 @@ document.addEventListener('keydown', e => {
 // Deploy this file to Vercel and the QR encodes its live URL automatically.
 // Only set PLAY_URL_OVERRIDE if players should land on a DIFFERENT address than
 // this page (e.g. a custom domain that points here). Otherwise leave it blank.
-const PLAY_URL_OVERRIDE = 'https://backspintrivia.com';
+const PLAY_URL_OVERRIDE = 'https://backspintrivia.com/backspin_reunion_2006.html';
 const _liveURL = (location.protocol === 'http:' || location.protocol === 'https:')
   ? location.origin + location.pathname
   : 'https://backspintrivia.app';
@@ -1202,12 +1202,18 @@ function PracticeGate() {
 }
 
 function Root() {
-  const path = window.location.pathname.replace(/\/+$/, '');
+  // Reunion routes use the #hash so players, host and TV all run from this one file:
+  //   backspin_reunion_2006.html        -> players
+  //   backspin_reunion_2006.html#host   -> host controls
+  //   backspin_reunion_2006.html#tv     -> TV screen
+  const hash = window.location.hash.replace(/^#\/?/, '').replace(/\/+$/, '');
+  const path = hash ? '/' + hash : window.location.pathname.replace(/\/+$/, '');
   if (path === '/host') return <HostView />;
   if (path === '/tv') return <TvView />;
   if (path === '/practice') return <PracticeGate />;
   return <PlayerRoot />;
 }
+window.addEventListener('hashchange', () => window.location.reload());
 ReactDOM.render(<Root />, document.getElementById('root'));
 </script>
 </body>
